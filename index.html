@@ -130,6 +130,131 @@
       }
     }
 
+    /* ══ MINI NAV SIDEBAR (desktop 1024px+) ══ */
+    #mini-nav {
+      display: none; /* hidden on mobile/tablet */
+    }
+
+    @media(min-width:1024px) {
+      #mini-nav {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 68px;
+        min-width: 68px;
+        height: 100%;
+        background: var(--bg2);
+        border-right: 1px solid var(--border);
+        z-index: 12;
+        flex-shrink: 0;
+        padding: .6rem 0;
+        gap: 0;
+        position: relative;
+      }
+
+      /* hide the old sidebar header logo on desktop since mini-nav has it */
+      #mini-nav + #sidebar .sb-header .sb-logo { display: none }
+      #mini-nav + #sidebar .sb-header .ico-btn[id="theme-toggle-btn"] { margin-left: auto }
+
+      /* page-overlay should start after mini-nav on desktop */
+      #page-overlay { left: calc(var(--sidebar) + 68px) }
+    }
+
+    .mn-logo {
+      width: 42px; height: 42px;
+      border-radius: 14px;
+      background: var(--primary-soft);
+      border: 1.5px solid var(--border2);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: .8rem;
+      flex-shrink: 0;
+    }
+
+    .mn-items {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .2rem;
+      flex: 1;
+      width: 100%;
+      padding: 0 .5rem;
+    }
+
+    .mn-bottom {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 .5rem .4rem;
+      width: 100%;
+    }
+
+    .mn-item {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: .22rem;
+      padding: .52rem .3rem;
+      border-radius: 14px;
+      border: none;
+      background: transparent;
+      color: var(--text3);
+      cursor: pointer;
+      transition: all .18s cubic-bezier(.34,1.56,.64,1);
+      position: relative;
+    }
+
+    .mn-item:hover {
+      background: var(--bg3);
+      color: var(--text2);
+      transform: scale(1.04);
+    }
+
+    .mn-item.active {
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .mn-item svg {
+      width: 22px; height: 22px;
+      flex-shrink: 0;
+    }
+
+    .mn-label {
+      font-size: .5rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      line-height: 1;
+    }
+
+    .mn-av {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .7rem;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(91,63,255,.35);
+    }
+
+    .mn-item.active .mn-av {
+      box-shadow: 0 0 0 3px var(--primary-soft), 0 2px 8px rgba(91,63,255,.35);
+    }
+
+    /* Active indicator line */
+    .mn-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 25%; bottom: 25%;
+      width: 3px;
+      border-radius: 0 3px 3px 0;
+      background: var(--primary);
+    }
+
     /* ══ SETUP SCREEN ══ */
     #setup-screen {
       position: fixed;
@@ -815,14 +940,13 @@
 
     /* ══ SIDEBAR BOTTOM (PC) ══ */
     #sb-bottom-nav {
-      display: flex;
-      border-top: 1px solid var(--border);
-      flex-shrink: 0;
-      background: var(--bg2);
+      display: none !important; /* replaced by mini-nav on desktop */
     }
 
-    @media(max-width:700px) {
-      #sb-bottom-nav { display: none }
+    /* On desktop, sidebar header: hide logo since mini-nav has the app icon */
+    @media(min-width:1024px) {
+      .sb-logo { display: none !important }
+      .sb-header { justify-content: flex-end }
     }
 
     .sb-nav-item {
@@ -1581,10 +1705,17 @@
       animation: slideIn .22s ease-out;
     }
 
-    /* On big screens: only cover the main area (right of sidebar) */
-    @media(min-width:701px) {
+    /* On tablet: only cover the main area (right of sidebar) */
+    @media(min-width:701px) and (max-width:1023px) {
       #page-overlay {
         left: var(--sidebar);
+      }
+    }
+
+    /* On desktop: cover right of mini-nav + sidebar */
+    @media(min-width:1024px) {
+      #page-overlay {
+        left: calc(68px + var(--sidebar));
       }
     }
 
@@ -2978,6 +3109,38 @@
 
   <!-- MAIN APP -->
   <div id="app">
+    <!-- MINI NAV SIDEBAR (desktop only) -->
+    <div id="mini-nav">
+      <div class="mn-logo">
+        <svg viewBox="0 0 28 28" fill="none" style="width:26px;height:26px">
+          <path d="M4 6C4 4.895 4.895 4 6 4H22C23.105 4 24 4.895 24 6V17C24 18.105 23.105 19 22 19H15.5L11 23V19H6C4.895 19 4 18.105 4 17V6Z" fill="var(--primary)" opacity=".9"/>
+          <circle cx="10" cy="12" r="1.4" fill="white"/>
+          <circle cx="14" cy="12" r="1.4" fill="white"/>
+          <circle cx="18" cy="12" r="1.4" fill="white"/>
+        </svg>
+      </div>
+      <div class="mn-items">
+        <button class="mn-item active" id="mni-chats" title="Chats">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+          </svg>
+          <span class="mn-label">Chats</span>
+        </button>
+        <button class="mn-item" id="mni-settings" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <span class="mn-label">Settings</span>
+        </button>
+      </div>
+      <div class="mn-bottom">
+        <button class="mn-item" id="mni-profile" title="Profile">
+          <div class="mn-av" id="mn-av">P</div>
+          <span class="mn-label">Profile</span>
+        </button>
+      </div>
+    </div>
     <!-- SIDEBAR -->
     <div id="sidebar" class="mob-hidden">
       <div class="sb-header">
@@ -3027,27 +3190,11 @@
         </div>
 
       </div>
-      <!-- PC Bottom Nav -->
-      <div id="sb-bottom-nav">
-        <button class="sb-nav-item active" id="sbn-chats">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
-          Chats
-        </button>
-        <button class="sb-nav-item" id="sbn-settings">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            <circle cx="12" cy="12" r="3" />
-          </svg>
-          Settings
-        </button>
-        <button class="sb-nav-item" id="sbn-profile">
-          <div class="sn-av" id="sbn-av">P</div>
-          Profile
-        </button>
+      <!-- Ghost elements for JS compatibility (hidden, replaced by mini-nav on desktop) -->
+      <div id="sb-bottom-nav" style="display:none">
+        <button id="sbn-chats" style="display:none"></button>
+        <button id="sbn-settings" style="display:none"></button>
+        <button id="sbn-profile" style="display:none"><div class="sn-av" id="sbn-av">P</div></button>
       </div>
     </div>
 
@@ -3544,9 +3691,11 @@
       const el1 = document.getElementById('sbn-av');
       const el2 = document.getElementById('bn-av');
       const el3 = document.getElementById('nd-av');
+      const el4 = document.getElementById('mn-av');
       if (el1) el1.textContent = l;
       if (el2) el2.textContent = l;
       if (el3) el3.textContent = l;
+      if (el4) el4.textContent = l;
     }
 
     // ══════════════════════════════════════
@@ -4448,16 +4597,19 @@
     }
 
     function setNavActive(tab) {
-      document.querySelectorAll('.sb-nav-item,.bnav-item').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.sb-nav-item,.bnav-item,.mn-item').forEach(x => x.classList.remove('active'));
       if (tab === 'chats') {
         document.getElementById('sbn-chats').classList.add('active');
         document.getElementById('bn-chats').classList.add('active');
+        document.getElementById('mni-chats')?.classList.add('active');
       } else if (tab === 'settings') {
         document.getElementById('sbn-settings').classList.add('active');
         document.getElementById('bn-settings').classList.add('active');
+        document.getElementById('mni-settings')?.classList.add('active');
       } else if (tab === 'profile') {
         document.getElementById('sbn-profile').classList.add('active');
         document.getElementById('bn-profile').classList.add('active');
+        document.getElementById('mni-profile')?.classList.add('active');
       }
     }
 
@@ -4479,6 +4631,23 @@
     });
     document.getElementById('sbn-profile').addEventListener('click', () => { setNavActive('profile'); openPage('profile'); showBottomNav(true); });
     document.getElementById('bn-profile').addEventListener('click', () => {
+      setNavActive('profile'); openPage('profile'); showBottomNav(true);
+    });
+
+    // Mini nav listeners (desktop)
+    document.getElementById('mni-chats')?.addEventListener('click', () => {
+      setNavActive('chats');
+      document.getElementById('page-overlay').classList.remove('show');
+      document.getElementById('sidebar').classList.remove('page-dimmed');
+      document.getElementById('chat-view').classList.add('hidden');
+      document.getElementById('welcome-pane').classList.remove('hidden');
+      showBottomNav(true);
+      currentChat = null;
+    });
+    document.getElementById('mni-settings')?.addEventListener('click', () => {
+      setNavActive('settings'); openPage('settings'); showBottomNav(true);
+    });
+    document.getElementById('mni-profile')?.addEventListener('click', () => {
       setNavActive('profile'); openPage('profile'); showBottomNav(true);
     });
     document.getElementById('page-back').addEventListener('click', () => {
