@@ -3753,6 +3753,9 @@
       currentChat = id; patchContact(id, { unread: 0 });
       // push history state so browser/OS back goes to user list
       history.pushState({ chat: id }, '', location.href);
+      // Close settings/profile overlay if open (desktop: clicking a chat should show the chat)
+      document.getElementById('page-overlay').classList.remove('show');
+      document.getElementById('sidebar').classList.remove('page-dimmed');
       // mobile: hide sidebar, show main
       document.getElementById('sidebar').classList.add('mob-hidden');
       document.getElementById('chat-view').classList.remove('hidden');
