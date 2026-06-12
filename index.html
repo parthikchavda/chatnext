@@ -3031,6 +3031,30 @@
       }
     }
 
+    /* ══ FIRST-TIME ONBOARDING ══ */
+    .onboard-step {
+      display: flex;
+      align-items: flex-start;
+      gap: .85rem;
+      padding: .7rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .onboard-step:last-child { border-bottom: none }
+    .onboard-step-num {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-size: .78rem;
+      font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      margin-top: .05rem;
+    }
+    .onboard-step-body { flex: 1; min-width: 0 }
+    .onboard-step-title { font-size: .88rem; font-weight: 700; color: var(--text); margin-bottom: .18rem }
+    .onboard-step-desc { font-size: .78rem; color: var(--text2); line-height: 1.5 }
+
     /* ══ THEME CARD CAROUSEL ══ */
     .theme-carousel-wrap {
       overflow-x: auto; overflow-y: hidden;
@@ -3459,7 +3483,42 @@
     </div>
   </div>
 
-  <!-- CONTEXT MENU (right-click on user list) -->
+  <!-- FIRST-TIME ONBOARDING MODAL -->
+  <div class="modal-overlay" id="onboard-modal">
+    <div class="modal" style="max-width:360px">
+      <div class="modal-handle"></div>
+      <div style="text-align:center;margin-bottom:1.2rem">
+        <div style="font-size:2.4rem;margin-bottom:.4rem">👋</div>
+        <h3 style="margin:0 0 .3rem;font-size:1.15rem">Welcome to NexChat!</h3>
+        <p style="font-size:.8rem;color:var(--text2);margin:0">Here's how to start chatting in seconds</p>
+      </div>
+      <div id="onboard-steps">
+        <div class="onboard-step">
+          <div class="onboard-step-num">1</div>
+          <div class="onboard-step-body">
+            <div class="onboard-step-title">Copy your Token</div>
+            <div class="onboard-step-desc">This is your unique ID. Share it with anyone who wants to chat with you.</div>
+            <button class="modal-btn" id="onboard-copy-token" style="margin-top:.6rem;padding:.5rem 1rem;font-size:.8rem">📋 Copy My Token</button>
+          </div>
+        </div>
+        <div class="onboard-step">
+          <div class="onboard-step-num">2</div>
+          <div class="onboard-step-body">
+            <div class="onboard-step-title">Add a Contact</div>
+            <div class="onboard-step-desc">Tap the <strong>+</strong> button in the chat list, paste your friend's token, and connect instantly.</div>
+          </div>
+        </div>
+        <div class="onboard-step">
+          <div class="onboard-step-num">3</div>
+          <div class="onboard-step-body">
+            <div class="onboard-step-title">Start Chatting</div>
+            <div class="onboard-step-desc">Send messages, images, files, voice notes — all peer-to-peer, no servers.</div>
+          </div>
+        </div>
+      </div>
+      <button class="modal-btn" id="onboard-done-btn" style="margin-top:1rem">Got it, Let's Go! 🚀</button>
+    </div>
+  </div>
   <div id="ctx-menu">
     <button class="ctx-item" id="ctx-pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
@@ -3733,13 +3792,27 @@
       updateMyAvatar();
       renderList();
       initPeer();
-      // show sidebar on mobile = chats tab
       document.getElementById('sidebar').classList.remove('mob-hidden');
       showBottomNav(true);
-      // check url
       const ut = new URLSearchParams(location.search).get('connect');
       if (ut && myToken && ut !== myToken) { const ex = contacts.find(c => c.token === ut); if (ex) openChat(ex.id) }
+      // Show onboarding popup only on very first launch (no contacts, no prior seen flag)
+      const seen = localStorage.getItem('nc-onboard-seen');
+      if (!seen && contacts.length === 0) {
+        setTimeout(() => openModal('onboard-modal'), 600);
+      }
     }
+
+    // Onboarding modal handlers
+    document.getElementById('onboard-copy-token').addEventListener('click', () => {
+      copyText(myToken);
+      document.getElementById('onboard-copy-token').textContent = '✅ Token Copied!';
+      setTimeout(() => { document.getElementById('onboard-copy-token').textContent = '📋 Copy My Token' }, 2000);
+    });
+    document.getElementById('onboard-done-btn').addEventListener('click', () => {
+      localStorage.setItem('nc-onboard-seen', '1');
+      closeModal('onboard-modal');
+    });
 
     function updateMyAvatar() {
       const l = aLetter(myName);
@@ -3855,24 +3928,23 @@
         saveContacts(); return;
       }
       if (data.type === 'reaction') {
-        // Find the message by ID — search across all messages
-        const msg = c.messages?.find(m => m.id === data.msgId);
+        // Match by local id OR by sourceId (sender's original id) — handles cross-peer ID mismatch
+        const msg = c.messages?.find(m => m.id === data.msgId || m.sourceId === data.msgId || m.id === data.sourceId);
         if (msg) {
           if (!msg.reactions) msg.reactions = {};
-          // The other user reacted — store under 'them' key
           if (data.emoji) msg.reactions['them'] = data.emoji;
           else delete msg.reactions['them'];
           saveContacts();
-          if (currentChat === c.id) refreshReactionBar(data.msgId);
+          if (currentChat === c.id) refreshReactionBar(msg.id);
         }
         return;
       }
       // Incoming message
       let msg = null;
-      if (data.type === 'message') { msg = { id: 'm' + Date.now() + Math.random().toString(36).slice(2), type: 'text', text: data.text, reply: data.reply || null, from: 'them', time: Date.now() } }
-      else if (data.type === 'image') { msg = { id: 'm' + Date.now() + Math.random().toString(36).slice(2), type: 'image', src: data.src, caption: data.caption || '', mimeType: data.mimeType || 'image/*', from: 'them', time: Date.now() } }
-      else if (data.type === 'file') { msg = { id: 'm' + Date.now() + Math.random().toString(36).slice(2), type: 'file', name: data.name, size: data.size, src: data.src, from: 'them', time: Date.now() } }
-      else if (data.type === 'audio') { msg = { id: 'm' + Date.now() + Math.random().toString(36).slice(2), type: 'audio', src: data.src, from: 'them', time: Date.now() } }
+      if (data.type === 'message') { msg = { id: 'm' + Date.now() + Math.random().toString(36).slice(2), sourceId: data.msgId || null, type: 'text', text: data.text, reply: data.reply || null, from: 'them', time: Date.now() } }
+      else if (data.type === 'image') { msg = { id: 'm' + Date.now() + Math.random().toString(36).slice(2), sourceId: data.msgId || null, type: 'image', src: data.src, caption: data.caption || '', mimeType: data.mimeType || 'image/*', from: 'them', time: Date.now() } }
+      else if (data.type === 'file') { msg = { id: 'm' + Date.now() + Math.random().toString(36).slice(2), sourceId: data.msgId || null, type: 'file', name: data.name, size: data.size, src: data.src, from: 'them', time: Date.now() } }
+      else if (data.type === 'audio') { msg = { id: 'm' + Date.now() + Math.random().toString(36).slice(2), sourceId: data.msgId || null, type: 'audio', src: data.src, from: 'them', time: Date.now() } }
       if (!msg) return;
       pushMsg(c.id, msg);
       const conn2 = connections[c.token];
@@ -4186,9 +4258,12 @@
       saveContacts();
       refreshReactionBar(msgId);
       closeReactionPicker();
-      // Always sync reaction to peer regardless of message direction
+      // Always sync reaction to peer — send both local id and sourceId for cross-peer matching
       const conn = connections[c.token];
-      if (conn?.open) conn.send({ type: 'reaction', msgId, emoji: newEmoji, originalFrom: msgs[idx].from });
+      if (conn?.open) {
+        const m = msgs[idx];
+        conn.send({ type: 'reaction', msgId: m.id, sourceId: m.sourceId || m.id, emoji: newEmoji });
+      }
     }
 
     function closeReactionPicker() {
@@ -4774,6 +4849,8 @@
       saveContacts(); connectTo(token, id); closeModal('add-contact-modal'); renderList(); openChat(id); toast('Contact added!');
     });
     document.getElementById('add-token-inp').addEventListener('keypress', e => { if (e.key === 'Enter') document.getElementById('add-confirm-btn').click() });
+    document.getElementById('add-nick-inp')?.addEventListener('keypress', e => { if (e.key === 'Enter') document.getElementById('add-confirm-btn').click() });
+    document.getElementById('edit-name-inp')?.addEventListener('keypress', e => { if (e.key === 'Enter') document.getElementById('edit-save-btn').click() });
 
     // ══════════════════════════════════════
     //  CONTEXT MENU (3-dot / right-click)
