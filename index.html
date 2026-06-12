@@ -2265,22 +2265,29 @@
     }
 
     /* CONTEXT MENU */
-    #ctx-menu {
+    #ctx-menu, #msg-ctx-menu {
       position: fixed;
       z-index: 300;
       background: var(--bg2);
       border: 1px solid var(--border2);
       border-radius: 18px;
       min-width: 190px;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, .18);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, .22), 0 2px 8px rgba(0,0,0,.12);
       display: none;
       animation: pop .15s ease-out;
       overflow: hidden;
-      backdrop-filter: blur(8px);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
     }
+    #ctx-menu.show, #msg-ctx-menu.show { display: block }
+    #msg-ctx-menu { min-width: 170px; z-index: 310 }
 
-    #ctx-menu.show {
-      display: block
+    /* Pin badge on chat list item */
+    .ci-pin-badge {
+      font-size: .62rem;
+      color: var(--primary);
+      margin-left: .2rem;
+      opacity: .7;
     }
 
     .ctx-item {
@@ -2837,9 +2844,9 @@
         display: none
       }
 
-      /* ── Chat view sits above the fixed 3.6rem bottom nav ── */
+      /* ── Chat view takes full height on mobile (no bottom nav when in chat) ── */
       #chat-view {
-        padding-bottom: 3.6rem;
+        padding-bottom: 0;
       }
 
       /* Safe-area support for notched phones */
@@ -2850,6 +2857,13 @@
       /* Messages: extra bottom room so last bubble breathes */
       #messages {
         padding-bottom: 1rem;
+      }
+    }
+
+    /* Mobile: bottom-nav hidden state when chat is open */
+    @media(max-width:700px) {
+      #bottom-nav.in-chat {
+        display: none !important;
       }
     }
 
@@ -2989,11 +3003,33 @@
       --text:#ffffff;--text2:rgba(255,255,255,.6);--text3:rgba(255,255,255,.3);
       --me-bubble:#a78bfa;--them-bubble:rgba(255,255,255,.1);
     }
-    body.theme-8 #sidebar,body.theme-8 #main-area,body.theme-8 .ch-header+*,
+    /* Glass theme blur — #main-area intentionally excluded to avoid breaking
+       the fixed #bottom-nav stacking context on mobile */
+    body.theme-8 #sidebar,body.theme-8 .ch-header+*,
     body.theme-8 .set-card,body.theme-8 .input-bar,body.theme-8 #page-overlay,
     body.theme-8 .modal { backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px) }
     body.theme-8 #sidebar { background:rgba(255,255,255,.07);border-right-color:rgba(255,255,255,.12) }
     body.theme-8 .set-card { border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07) }
+
+    /* Glass theme: mobile bottom nav — solid frosted glass so it's always visible */
+    @media(max-width:700px) {
+      body.theme-8 #bottom-nav {
+        background: rgba(12, 10, 35, 0.82) !important;
+        backdrop-filter: blur(30px) saturate(1.8) !important;
+        -webkit-backdrop-filter: blur(30px) saturate(1.8) !important;
+        border-top: 1px solid rgba(167,139,250,.25) !important;
+        box-shadow: 0 -4px 32px rgba(0,0,0,.45) !important;
+      }
+      body.theme-8 #bottom-nav .bnav-item {
+        color: rgba(255,255,255,.45);
+      }
+      body.theme-8 #bottom-nav .bnav-item.active {
+        color: #a78bfa;
+      }
+      body.theme-8 #bottom-nav .bnav-item.active .bnav-icon-wrap {
+        background: rgba(167,139,250,.18);
+      }
+    }
 
     /* ══ THEME CARD CAROUSEL ══ */
     .theme-carousel-wrap {
@@ -3448,6 +3484,25 @@
       </svg> Delete Contact</button>
   </div>
 
+  <!-- MESSAGE CONTEXT MENU (long press / right-click on message) -->
+  <div id="msg-ctx-menu">
+    <button class="ctx-item" id="mctx-react">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0">
+        <circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 13s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/>
+      </svg> React
+    </button>
+    <button class="ctx-item" id="mctx-copy">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0">
+        <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+      </svg> Copy Text
+    </button>
+    <button class="ctx-item" id="mctx-reply">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+      </svg> Reply
+    </button>
+  </div>
+
   <!-- CHAT OPTIONS MODAL (three-dot in chat header) -->
   <div class="modal-overlay" id="chat-options-modal">
     <div class="modal" style="max-width:360px">
@@ -3800,9 +3855,11 @@
         saveContacts(); return;
       }
       if (data.type === 'reaction') {
+        // Find the message by ID — search across all messages
         const msg = c.messages?.find(m => m.id === data.msgId);
         if (msg) {
           if (!msg.reactions) msg.reactions = {};
+          // The other user reacted — store under 'them' key
           if (data.emoji) msg.reactions['them'] = data.emoji;
           else delete msg.reactions['them'];
           saveContacts();
@@ -3882,7 +3939,7 @@
         return `<div class="ci${currentChat === c.id ? ' active' : ''}${c.pinned ? ' pinned' : ''}${c.muted ? ' muted' : ''}" data-id="${c.id}" onclick="openChat('${c.id}')" oncontextmenu="showCtx(event,'${c.id}')">
       <div class="av" style="background:${col}">${l}<div class="av-dot${on ? ' on' : ''}"></div></div>
       <div class="ci-info">
-        <div class="ci-name">${esc(c.name)}${c.muted ? '<span class="ci-mute-icon">🔕</span>' : ''}</div>
+        <div class="ci-name">${esc(c.name)}${c.pinned ? '<span class="ci-pin-badge">📌</span>' : ''}${c.muted ? '<span class="ci-mute-icon">🔕</span>' : ''}</div>
         <div class="ci-prev">${esc(c.lastMsg || 'No messages yet')}</div>
       </div>
       <div class="ci-meta">
@@ -4123,19 +4180,15 @@
       if (idx < 0) return;
       if (!msgs[idx].reactions) msgs[idx].reactions = {};
       const prevEmoji = msgs[idx].reactions['me'];
-      if (prevEmoji === emoji) {
-        delete msgs[idx].reactions['me'];
-      } else {
-        msgs[idx].reactions['me'] = emoji;
-      }
+      const newEmoji = prevEmoji === emoji ? null : emoji;
+      if (newEmoji) msgs[idx].reactions['me'] = newEmoji;
+      else delete msgs[idx].reactions['me'];
       saveContacts();
       refreshReactionBar(msgId);
       closeReactionPicker();
-      // Sync to peer
-      if (msgs[idx].from === 'them') {
-        const conn = connections[c.token];
-        if (conn?.open) conn.send({ type: 'reaction', msgId, emoji: prevEmoji === emoji ? null : emoji });
-      }
+      // Always sync reaction to peer regardless of message direction
+      const conn = connections[c.token];
+      if (conn?.open) conn.send({ type: 'reaction', msgId, emoji: newEmoji, originalFrom: msgs[idx].from });
     }
 
     function closeReactionPicker() {
@@ -4179,16 +4232,49 @@
     document.getElementById('reaction-overlay').addEventListener('click', closeReactionPicker);
 
     function setupReactionPress(row, bub, m) {
-      // Single tap on bubble → show WhatsApp-style reaction picker
-      // But only after a short delay to distinguish from scrolling on mobile
-      let tapped = false, tapTimer = null;
+      let pressTimer = null;
 
-      bub.addEventListener('click', (e) => {
-        // Don't trigger on links/buttons inside the bubble
+      // Double-click/double-tap → reaction picker
+      bub.addEventListener('dblclick', (e) => {
         if (e.target.closest('a, button, video, audio')) return;
         e.stopPropagation();
+        e.preventDefault();
         showReactionPicker(bub, m);
       });
+
+      // Long press (500ms) → context menu with Copy option
+      bub.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('a, button, video, audio')) return;
+        pressTimer = setTimeout(() => {
+          pressTimer = null;
+          showMsgCtx(e, bub, m);
+        }, 500);
+      });
+      bub.addEventListener('pointerup', () => { clearTimeout(pressTimer); pressTimer = null; });
+      bub.addEventListener('pointermove', () => { clearTimeout(pressTimer); pressTimer = null; });
+      bub.addEventListener('pointercancel', () => { clearTimeout(pressTimer); pressTimer = null; });
+
+      // Right-click on desktop → same context menu
+      bub.addEventListener('contextmenu', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        showMsgCtx(e, bub, m);
+      });
+    }
+
+    // Message context menu (Copy, React, Reply)
+    let _msgCtxMsg = null;
+    function showMsgCtx(e, bub, m) {
+      _msgCtxMsg = m;
+      const menu = document.getElementById('msg-ctx-menu');
+      if (!menu) return;
+      const copyItem = document.getElementById('mctx-copy');
+      if (copyItem) copyItem.style.display = m.type === 'text' ? 'flex' : 'none';
+      const replyItem = document.getElementById('mctx-reply');
+      if (replyItem) replyItem.style.display = m.type === 'text' ? 'flex' : 'none';
+      const cx = 'clientX' in e ? e.clientX : bub.getBoundingClientRect().left + 40;
+      const cy = 'clientY' in e ? e.clientY : bub.getBoundingClientRect().bottom;
+      menu.classList.add('show');
+      positionMenu(menu, cx, cy);
     }
 
     // ══════════════════════════════════════
@@ -4590,9 +4676,14 @@
     function showBottomNav(visible) {
       const nav = document.getElementById('bottom-nav');
       if (!nav) return;
-      // only affects mobile (CSS handles desktop)
       if (window.innerWidth <= 700) {
-        nav.style.display = visible ? 'flex' : 'none';
+        if (visible) {
+          nav.classList.remove('in-chat');
+          nav.style.display = 'flex';
+        } else {
+          nav.classList.add('in-chat');
+          nav.style.display = 'none';
+        }
       }
     }
 
@@ -4692,14 +4783,10 @@
       ctxContactId = cid;
       const menu = document.getElementById('ctx-menu');
       const c = getContact(cid);
-      document.getElementById('ctx-pin').textContent = '';
       document.getElementById('ctx-pin').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> ${c?.pinned ? 'Unpin' : 'Pin'} Chat`;
       document.getElementById('ctx-mute').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>${c?.muted ? '' : '<path stroke-linecap="round" stroke-linejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>'}</svg> ${c?.muted ? 'Unmute' : 'Mute'}`;
-      menu.style.display = 'block';
-      const x = Math.min(e.clientX, window.innerWidth - 200);
-      const y = Math.min(e.clientY, window.innerHeight - 250);
-      menu.style.left = x + 'px'; menu.style.top = y + 'px';
       menu.classList.add('show');
+      positionMenu(menu, e.clientX, e.clientY);
     }
 
     document.addEventListener('click', () => { document.getElementById('ctx-menu').classList.remove('show') });
@@ -4731,6 +4818,51 @@
       contacts = contacts.filter(x => x.id !== ctxContactId); saveContacts();
       if (currentChat === ctxContactId) { currentChat = null; document.getElementById('chat-view').classList.add('hidden'); document.getElementById('welcome-pane').classList.remove('hidden') }
       renderList(); toast('Deleted');
+    });
+
+    // Message context menu handlers
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#msg-ctx-menu')) document.getElementById('msg-ctx-menu').classList.remove('show');
+    });
+
+    function positionMenu(menu, clientX, clientY) {
+      // Temporarily show to measure
+      menu.style.visibility = 'hidden';
+      menu.style.display = 'block';
+      const mw = menu.offsetWidth || 180;
+      const mh = menu.offsetHeight || 140;
+      menu.style.display = '';
+      menu.style.visibility = '';
+      const vw = window.innerWidth, vh = window.innerHeight;
+      let x = clientX, y = clientY;
+      if (x + mw + 12 > vw) x = vw - mw - 12;
+      if (y + mh + 12 > vh) y = clientY - mh - 8;
+      if (y < 8) y = 8;
+      if (x < 8) x = 8;
+      menu.style.left = x + 'px';
+      menu.style.top = y + 'px';
+    }
+
+    document.getElementById('mctx-react').addEventListener('click', () => {
+      document.getElementById('msg-ctx-menu').classList.remove('show');
+      if (!_msgCtxMsg) return;
+      // Find the bubble element and show reaction picker
+      const row = document.getElementById(_msgCtxMsg.id);
+      const bub = row?.querySelector('.bub');
+      if (bub) showReactionPicker(bub, _msgCtxMsg);
+    });
+
+    document.getElementById('mctx-copy').addEventListener('click', () => {
+      document.getElementById('msg-ctx-menu').classList.remove('show');
+      if (!_msgCtxMsg || _msgCtxMsg.type !== 'text') return;
+      copyText(_msgCtxMsg.text);
+      toast('📋 Copied!');
+    });
+
+    document.getElementById('mctx-reply').addEventListener('click', () => {
+      document.getElementById('msg-ctx-menu').classList.remove('show');
+      if (!_msgCtxMsg || _msgCtxMsg.type !== 'text') return;
+      setReply(_msgCtxMsg.text);
     });
 
 
@@ -5335,6 +5467,7 @@
       if (e.key === 'Escape') {
         document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('show'));
         document.getElementById('ctx-menu').classList.remove('show');
+        document.getElementById('msg-ctx-menu').classList.remove('show');
         document.getElementById('img-viewer').classList.remove('show');
         document.getElementById('attach-menu').classList.remove('show');
         document.getElementById('emoji-picker').classList.remove('show');
