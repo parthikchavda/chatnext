@@ -274,7 +274,9 @@
     #setup-screen::before {
       content: '';
       position: absolute; inset: 0;
-      background: linear-gradient(180deg, rgba(20,30,70,.35) 0%, rgba(20,30,70,.65) 100%);
+      /* background: linear-gradient(180deg, rgba(20,30,70,.35) 0%, rgba(20,30,70,.65) 100%); */
+      background: rgba(20, 25, 45, 0.35);
+      backdrop-filter: blur(4px);
     }
     #setup-screen.hidden { display: none }
 
