@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Privacy Policy — Message-X</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --primary:#5b3fff; --primary2:#4a2fe0; --primary-light:#7c5fff;
+    --bg:#f0eff8; --bg2:#ffffff; --text:#1a1140; --text2:#7b72a8; --border:rgba(91,63,255,.1);
+  }
+  html,body{min-height:100%}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:var(--bg); color:var(--text);
+    line-height:1.7;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:clamp(1.5rem,5vw,3.5rem) clamp(1.2rem,5vw,2rem)}
+  header{display:flex;align-items:center;gap:.7rem;margin-bottom:2rem}
+  .logo{width:42px;height:42px;border-radius:14px;background:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .logo svg{width:24px;height:24px}
+  h1{font-size:1.4rem;font-weight:800;letter-spacing:-.02em}
+  .updated{color:var(--text2);font-size:.85rem;margin-bottom:2rem}
+  .card{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:clamp(1.2rem,4vw,2rem);margin-bottom:1.2rem}
+  h2{font-size:1.05rem;font-weight:800;margin-bottom:.6rem;color:var(--primary2)}
+  p, li{font-size:.92rem;color:var(--text)}
+  p{margin-bottom:.8rem}
+  ul{padding-left:1.3rem;margin-bottom:.8rem}
+  li{margin-bottom:.4rem}
+  a{color:var(--primary)}
+  .back{display:inline-flex;align-items:center;gap:.4rem;font-weight:700;color:var(--primary);text-decoration:none;font-size:.9rem;margin-bottom:1.5rem}
+  body.dark{--bg:#13111e;--bg2:#1e1b2e;--text:#f0eeff;--text2:#9b93c8;--border:rgba(255,255,255,.07)}
+  @media (prefers-color-scheme: dark){
+    :root{--bg:#13111e;--bg2:#1e1b2e;--text:#f0eeff;--text2:#9b93c8;--border:rgba(255,255,255,.07)}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="index.html">← Back to Message-X</a>
+    <header>
+      <div class="logo">
+        <svg viewBox="0 0 100 90" xmlns="http://www.w3.org/2000/svg">
+          <rect x="5" y="8" width="78" height="58" rx="18" fill="none" stroke="#fff" stroke-width="7"/>
+          <circle cx="29" cy="37" r="6" fill="#fff"/><circle cx="44" cy="37" r="6" fill="#fff"/><circle cx="59" cy="37" r="6" fill="#fff"/>
+          <line x1="70" y1="58" x2="92" y2="80" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+          <line x1="92" y1="58" x2="70" y2="80" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h1>Privacy Policy — Message-X</h1>
+    </header>
+    <div class="updated">Last updated: June 13, 2026</div>
+
+    <div class="card">
+      <h2>Overview</h2>
+      <p>Message-X is a peer-to-peer (P2P) chat application. There is no central server storing your messages, contacts, or account information. All communication happens directly between your device and the device of the person you're chatting with.</p>
+    </div>
+
+    <div class="card">
+      <h2>What We Store</h2>
+      <ul>
+        <li><strong>Display name & token</strong> — saved only in your browser's local storage on your own device.</li>
+        <li><strong>Contacts & messages</strong> — saved locally on your device only. Never uploaded anywhere.</li>
+        <li><strong>Media (images, files, voice notes)</strong> — transferred directly between peers and stored locally.</li>
+      </ul>
+      <p>We do not operate a database, and we cannot access, read, or recover any of your chats.</p>
+    </div>
+
+    <div class="card">
+      <h2>Peer-to-Peer Connections</h2>
+      <p>Message-X uses WebRTC (via PeerJS) to establish direct connections between users. A public signaling server is used only to help two devices discover each other and establish a connection — it does not see message content, calls, or files exchanged afterward.</p>
+    </div>
+
+    <div class="card">
+      <h2>Voice & Video Calls</h2>
+      <p>Calls are peer-to-peer using your device's microphone and camera. Access is requested only when you start or accept a call, and is never recorded or transmitted to us.</p>
+    </div>
+
+    <div class="card">
+      <h2>Your Control</h2>
+      <ul>
+        <li>You can clear chats, delete contacts, or log out at any time from within the app.</li>
+        <li>Logging out removes your name and token from this device's local storage.</li>
+        <li>Uninstalling/clearing browser data removes all locally stored chat history.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Changes to This Policy</h2>
+      <p>We may update this policy from time to time. Continued use of Message-X after changes means you accept the updated policy.</p>
+    </div>
+
+    <div class="card">
+      <h2>Contact</h2>
+      <p>Questions about this policy can be directed to the app developer, Parthik.</p>
+    </div>
+  </div>
+</body>
+</html>
